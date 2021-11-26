@@ -14,26 +14,29 @@
  * limitations under the License.
  */
 
-#include <liburing.h>
+syntax = "proto3";
 
-class CircletStore {
-    private:
-        int client_fd;
-        struct io_uring ring;
-        bool connected = false;
+// TODO Configure for gRPC gateway
+// import "google/api/annotations.proto";
 
-    protected:
-        void _ensure_connected();
-        std::string _make_request(std::string request);
+package circlet.v1;
 
-    public:
-        std::string connection_string;
+// option go_package = "github.com/tourneycloud/circlet/gen/go/circlet/v1";
 
-        CircletStore(std::string connection_string);
-        ~CircletStore();
+message Redirect {
+    string from_location = 1;
+    string to_location = 2;
+}
 
-        void record_redirect(std::string path);
-        std::string get_redirect_path(std::string path);
+message CreateRedirectRequest {
+    Redirect redirect = 1;
+}
 
-        void create_redirect(std::string from_path, std::string to_path);
-};
+service RedirectService {
+    rpc CreateShortenedRedirect(CreateRedirectRequest) returns (Redirect)  {
+        // option (google.api.http) = {
+        //     post: "/v1/redirects:shorten"
+        //     body: "redirect"
+        // };
+    }
+}
