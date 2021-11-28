@@ -102,8 +102,6 @@ std::string CircletStore::_make_request(std::string request) {
         fatal("io_uring_get_sqe() failed");
     }
 
-    io_uring_prep_write(sqe, this->client_fd, request_str, request_str_len, 0);
-
     char buffer[STORE_READ_BUFFER_SIZE];
     memset(buffer, 0, sizeof(buffer));
     io_uring_prep_read(sqe, client_fd, buffer, STORE_READ_BUFFER_SIZE, 0);
