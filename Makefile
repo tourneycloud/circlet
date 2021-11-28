@@ -24,6 +24,9 @@ redirectservice_dev:
 		-ldl \
 		gen/redirectservice.grpc.pb.cc \
 		gen/redirectservice.pb.cc \
+		src/log.cc \
+		src/store.cc \
+		src/urlgen.cc \
 		src/redirectservice.cc \
 		-o build/circlet_redirectservice.dev
 
@@ -39,6 +42,7 @@ redirectservice_release:
 		gen/redirectservice.pb.cc \
 		src/log.cc \
 		src/store.cc \
+		src/urlgen.cc \
 		src/redirectservice.cc \
 		-o build/circlet_redirectservice.dev
 
@@ -54,5 +58,6 @@ redirectservice_dev_mike:
 		gen/redirectservice.pb.cc \
 		src/log.cc \
 		src/store.cc \
+		src/urlgen.cc \
 		src/redirectservice.cc \
 		-o ~/circlet_redirectservice.dev

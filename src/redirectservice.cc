@@ -26,6 +26,7 @@
 
 #include "log.hh"
 #include "store.hh"
+#include "urlgen.hh"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -71,10 +72,13 @@ class RedirectServiceImpl final : public RedirectService::Service {
                 );
             }
 
-            this->get_store()->create_redirect(from_location, "/test");
+            // TODO Make URL generation configurable
+            auto to_location = "/" + encode_url_id(generate_url_id());
+
+            this->get_store()->create_redirect(from_location, to_location);
 
             response->set_from_location(from_location);
-            response->set_to_location("/test");
+            response->set_to_location(to_location);
 
             return Status::OK;
     }
