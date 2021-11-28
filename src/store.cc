@@ -150,5 +150,8 @@ std::string CircletStore::get_redirect_path(std::string path) {
 }
 
 void CircletStore::create_redirect(std::string from_path, std::string to_path) {
-    this->_make_request("set " + from_path + " " + to_path);
+    std::string response = this->_make_request("set " + from_path + " " + to_path);
+    if (response.substr(0, response.find_first_of('\n') - 1) != "+OK") {
+        std::cerr << "Failed to create redirect" << std::endl;
+    }
 }

@@ -24,6 +24,9 @@
 
 #include "redirectservice.grpc.pb.h"
 
+#include "log.hh"
+#include "store.hh"
+
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
@@ -35,46 +38,73 @@ using circlet::v1::CreateRedirectRequest;
 using circlet::v1::Redirect;
 
 class RedirectServiceImpl final : public RedirectService::Service {
-    Status CreateShortenedRedirect(
-        ServerContext* context,
-        const CreateRedirectRequest* request,
-        Redirect* response
-    ) override {
-        auto from_location = request->redirect().from_location();
-        if (from_location == "") {
-            return Status(StatusCode::INVALID_ARGUMENT, "Must provide from_location as path or url");
+    private:
+        CircletStore* store;
+
+    public:
+        void attach_store(CircletStore* store) {
+            this->store = store;
         }
 
-        if (request->redirect().to_location() != "") {
-            return Status(
-                StatusCode::INVALID_ARGUMENT,
-                "Must not set to_location in this endpoint since it will be generated in the response"
-            );
+        CircletStore* get_store() {
+            if (!this->store) {
+                fatal("Store is unattached which is necessary to fulfill Redirect Service methods");
+            }
+
+            return this->store;
         }
 
-        response->set_from_location(from_location);
-        response->set_to_location("/test");
+        Status CreateShortenedRedirect(
+            ServerContext* context,
+            const CreateRedirectRequest* request,
+            Redirect* response
+        ) override {
+            auto from_location = request->redirect().from_location();
+            if (from_location == "") {
+                return Status(StatusCode::INVALID_ARGUMENT, "Must provide from_location as path or url");
+            }
 
-        return Status::OK;
-  }
+            if (request->redirect().to_location() != "") {
+                return Status(
+                    StatusCode::INVALID_ARGUMENT,
+                    "Must not set to_location in this endpoint since it will be generated in the response"
+                );
+            }
+
+            this->get_store()->create_redirect(from_location, "/test");
+
+            response->set_from_location(from_location);
+            response->set_to_location("/test");
+
+            return Status::OK;
+    }
 };
 
-void run_server() {
-    auto server_address = "0.0.0.0:50051";
+void handle_sigint(int signum) {
+    std::cout << "Received SIGINT: shutting down" << std::endl;
+    std::exit(130);
+}
+
+int main(int argc, char* argv[]) {
+    signal(SIGINT, handle_sigint);
+
+    auto bind_address = argc > 1 ? std::string(argv[1]) : "0.0.0.0:50051";
+    auto store_connection_string = argc > 2 ? std::string(argv[2]) : "localhost:6379";
+
+    auto store = new CircletStore(store_connection_string);
 
     auto service = RedirectServiceImpl();
+    service.attach_store(store);
 
     grpc::EnableDefaultHealthCheckService(true);
     grpc::reflection::InitProtoReflectionServerBuilderPlugin();
     ServerBuilder builder;
-    builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+    builder.AddListeningPort(bind_address, grpc::InsecureServerCredentials());
     builder.RegisterService(&service);
     std::unique_ptr<Server> server(builder.BuildAndStart());
-    std::cout << "RedirectService listening on " << server_address << std::endl;
-    server->Wait();
-}
 
-int main(int argc, char** argv) {
-    run_server();
+    std::cout << "RedirectService listening on " << bind_address << std::endl;
+    server->Wait();
+
     return 0;
 }

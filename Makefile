@@ -34,8 +34,11 @@ redirectservice_release:
 		-L/usr/local/lib `pkg-config --libs protobuf grpc++` \
 		-lgrpc++_reflection \
 		-ldl \
+		/usr/lib/liburing.so \
 		gen/redirectservice.grpc.pb.cc \
 		gen/redirectservice.pb.cc \
+		src/log.cc \
+		src/store.cc \
 		src/redirectservice.cc \
 		-o build/circlet_redirectservice.dev
 
@@ -46,21 +49,10 @@ redirectservice_dev_mike:
 		-L/usr/local/lib `pkg-config --libs protobuf grpc++` \
 		-lgrpc++_reflection \
 		-ldl \
+		/usr/lib/liburing.so \
 		gen/redirectservice.grpc.pb.cc \
 		gen/redirectservice.pb.cc \
+		src/log.cc \
+		src/store.cc \
 		src/redirectservice.cc \
 		-o ~/circlet_redirectservice.dev
-
-# redirectservice_dev_macos:
-# 	PKG_CONFIG_PATH="/usr/local/opt/openssl@1.1/lib/pkgconfig" \
-# 		clang++ -Wall -pedantic --std=c++2a \
-# 		-I./src \
-# 		-I./gen \
-# 		-L/usr/local/opt/openssl@1.1/lib \
-# 		-L/usr/local/lib `pkg-config --libs protobuf grpc++` \
-# 		-lgrpc++_reflection \
-# 		-ldl \
-# 		gen/redirectservice.grpc.pb.cc \
-# 		gen/redirectservice.pb.cc \
-# 		src/redirectservice.cc \
-# 		-o build/circlet_redirectservice.dev
